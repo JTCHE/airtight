@@ -47,6 +47,11 @@ pub fn sync_packet(first: bool, playing: u32, wall_ns: u64, clock_id: u64) -> [u
     out
 }
 
+/// The RTP time in an audio packet's header.
+pub fn timestamp(packet: &[u8]) -> u32 {
+    u32::from_be_bytes([packet[4], packet[5], packet[6], packet[7]])
+}
+
 pub struct ResendRequest {
     /// The request's own sequence number, echoed in each reply.
     pub request: u16,

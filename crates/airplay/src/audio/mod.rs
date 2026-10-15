@@ -11,7 +11,7 @@ use airtight_ptp::Clock;
 use airtight_wire::{alac, rtp};
 use ring::Ring;
 use std::net::{SocketAddr, UdpSocket};
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
@@ -53,6 +53,29 @@ pub struct Stream {
     ring: Arc<Mutex<Ring>>,
     running: Arc<AtomicBool>,
     resender: Option<JoinHandle<()>>,
+    counts: Counts,
+    resent: Arc<Resent>,
+}
+
+/// Shared with the resend thread.
+#[derive(Default)]
+struct Resent {
+    count: AtomicU32,
+    late: AtomicU32,
+    /// The RTP time of the frame that plays now.
+    playing: AtomicU32,
+}
+
+/// What the stream did since the last `take_counts()`.
+#[derive(Clone, Copy, Default, PartialEq, Eq, Debug)]
+pub struct Counts {
+    /// Packets the receiver asked for again: they were lost on the network.
+    pub resent: u32,
+    /// Of those, the ones asked for after their play time: an audible gap.
+    pub late: u32,
+    /// Frames dropped or inserted to hold the buffer depth.
+    pub dropped: u32,
+    pub inserted: u32,
 }
 
 impl Stream {
@@ -68,10 +91,11 @@ impl Stream {
         let running = Arc::new(AtomicBool::new(true));
         let control = sockets.control.try_clone()?;
         control.set_read_timeout(Some(Duration::from_millis(200)))?;
-        let (ring_for_thread, running_for_thread) = (ring.clone(), running.clone());
+        let resent = Arc::new(Resent::default());
+        let (ring_for_thread, running_for_thread, resent_for_thread) = (ring.clone(), running.clone(), resent.clone());
         let resender = thread::Builder::new()
             .name("rtp-resend".into())
-            .spawn(move || resend(&control, &ring_for_thread, &running_for_thread))?;
+            .spawn(move || resend(&control, &ring_for_thread, &running_for_thread, &resent_for_thread))?;
         Ok(Stream {
             data: sockets.data,
             control: sockets.control,
@@ -90,7 +114,15 @@ impl Stream {
             ring,
             running,
             resender: Some(resender),
+            counts: Counts::default(),
+            resent,
         })
+    }
+
+    pub fn take_counts(&mut self) -> Counts {
+        let resent = self.resent.count.swap(0, Ordering::Relaxed);
+        let late = self.resent.late.swap(0, Ordering::Relaxed);
+        Counts { resent, late, ..std::mem::take(&mut self.counts) }
     }
 
     /// The next frame sent sounds at `play_at_ns` on the PTP timeline.
@@ -116,7 +148,9 @@ impl Stream {
     /// Frames queued ahead of the one that plays now.
     pub fn depth(&self) -> f64 {
         let queued = self.timestamp.wrapping_add((self.pending.len() / CHANNELS) as u32);
-        queued.wrapping_sub(self.frame_at(self.clock.now_ns())) as i32 as f64
+        let playing = self.frame_at(self.clock.now_ns());
+        self.resent.playing.store(playing, Ordering::Relaxed);
+        queued.wrapping_sub(playing) as i32 as f64
     }
 
     /// Queue interleaved stereo samples and send every whole packet.
@@ -127,8 +161,10 @@ impl Stream {
             Correction::Drop(frames) => {
                 let drop = (frames * CHANNELS).min(self.pending.len());
                 self.pending.drain(..drop);
+                self.counts.dropped += (drop / CHANNELS) as u32;
             }
             Correction::Insert(frames) => {
+                self.counts.inserted += frames as u32;
                 // One frame repeats its neighbour; a long gap becomes silence.
                 let filler = match self.pending.get(..CHANNELS) {
                     Some(frame) if frames == 1 => frame.to_vec(),
@@ -169,7 +205,7 @@ impl Drop for Stream {
     }
 }
 
-fn resend(control: &UdpSocket, ring: &Mutex<Ring>, running: &AtomicBool) {
+fn resend(control: &UdpSocket, ring: &Mutex<Ring>, running: &AtomicBool, resent: &Resent) {
     let mut buffer = [0u8; 2048];
     while running.load(Ordering::Relaxed) {
         let Ok((length, from)) = control.recv_from(&mut buffer) else { continue };
@@ -178,6 +214,11 @@ fn resend(control: &UdpSocket, ring: &Mutex<Ring>, running: &AtomicBool) {
             let sequence = request.first.wrapping_add(offset);
             let reply = ring.lock().unwrap().get(sequence).map(|p| rtp::resend_reply(request.request, p));
             if let Some(reply) = reply {
+                resent.count.fetch_add(1, Ordering::Relaxed);
+                let end = rtp::timestamp(&reply[4..]).wrapping_add(rtp::FRAMES_PER_PACKET);
+                if end.wrapping_sub(resent.playing.load(Ordering::Relaxed)) as i32 <= 0 {
+                    resent.late.fetch_add(1, Ordering::Relaxed);
+                }
                 let _ = control.send_to(&reply, from);
             }
         }

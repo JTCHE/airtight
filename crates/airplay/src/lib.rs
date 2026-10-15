@@ -12,7 +12,7 @@ mod events;
 mod hap;
 mod pairing;
 
-pub use audio::Stream;
+pub use audio::{Counts, Stream};
 pub use identity::Identity;
 pub use session::{Config, Session};
 

@@ -29,6 +29,8 @@ pub struct Loopback {
     last_packet: Option<Instant>,
     /// Overflows while audio was flowing: audio was lost.
     pub lost: u32,
+    /// Silence filled while audio was flowing: Windows delivered late.
+    pub filled: u32,
 }
 
 impl Loopback {
@@ -63,7 +65,7 @@ impl Loopback {
                 }
             };
             client.Start()?;
-            Ok(Loopback { client, capture, event, clock: Instant::now(), last_packet: None, lost: 0 })
+            Ok(Loopback { client, capture, event, clock: Instant::now(), last_packet: None, lost: 0, filled: 0 })
         }
     }
 
@@ -84,6 +86,9 @@ impl Loopback {
             let gap = now - self.clock;
             if gap >= SILENCE_GAP {
                 let frames = (gap.as_secs_f64() * f64::from(SAMPLE_RATE)) as usize;
+                if self.last_packet.is_some_and(|t| now - t < Duration::from_millis(200)) {
+                    self.filled += 1;
+                }
                 self.clock += Duration::from_secs_f64(frames as f64 / f64::from(SAMPLE_RATE));
                 out.resize(out.len() + frames * usize::from(CHANNELS), 0);
                 return Ok(());

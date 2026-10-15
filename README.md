@@ -69,7 +69,7 @@ The script builds the release exe, stops the running copy, installs to `%LOCALAP
 <details>
 <summary><b>Troubleshooting</b></summary>
 
-- **Log:** `%APPDATA%\Airtight\session.log` on Windows, `~/.config/airtight/session.log` on Linux. `[CAPTURE]` lines point to a local cause (CPU load, power settings). `[AIRPLAY]` and `[LINK]` lines point to the network or the receiver.
+- **Log:** `%APPDATA%\Airtight\session.log` on Windows, `~/.config/airtight/session.log` on Linux. `[CAPTURE]` lines point to a local cause (CPU load, power settings). `[AIRPLAY]` and `[LINK]` lines point to the network or the receiver. `[STREAM] … late=N` counts packets that the receiver lost and asked for again too late: N above 0 is a gap you hear, caused by the receiver's Wi-Fi.
 - **You hear the sound twice:** capture an output that you do not listen to, for example a digital output with nothing connected.
 - **"Another program uses the PTP ports":** another AirPlay 2 sender runs. Stop it.
 - **No receivers found on Linux:** a firewall that blocks inbound traffic also blocks the mDNS replies. Allow the local network.

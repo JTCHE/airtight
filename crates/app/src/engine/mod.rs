@@ -20,6 +20,8 @@ use std::time::{Duration, Instant};
 /// A capture read normally returns one device period (10 ms). Longer
 /// means the pump was late.
 const LATE_READ: Duration = Duration::from_millis(100);
+/// How often the stream counters go to the log, when any is not zero.
+const COUNTS_EVERY: Duration = Duration::from_secs(30);
 
 pub enum Report {
     /// Connected; the receiver is locking onto our clock.
@@ -162,7 +164,7 @@ fn stream(context: &Context, session: &Session, endpoint: &Endpoint, meta: &meta
 
 fn pump(context: &Context, session: &Session, capture: &mut Loopback, stream: &mut Stream) -> Option<String> {
     let (mut samples, mut late, mut lost) = (Vec::with_capacity(8192), 0u32, 0u32);
-    let mut checked = Instant::now();
+    let (mut checked, mut counted, mut filled) = (Instant::now(), Instant::now(), 0u32);
     while !context.stop.load(Ordering::Relaxed) {
         if let Err(e) = capture.read(&mut samples) {
             return Some(format!("Capture failed: {e}"));
@@ -184,6 +186,11 @@ fn pump(context: &Context, session: &Session, capture: &mut Loopback, stream: &m
             return Some(format!("Network error: {e}"));
         }
         samples.clear();
+        if counted.elapsed() > COUNTS_EVERY {
+            counted = Instant::now();
+            log_counts(stream.take_counts(), capture.filled - filled);
+            filled = capture.filled;
+        }
         if checked.elapsed() > Duration::from_secs(1) {
             checked = Instant::now();
             if let Some(failure) = session.failure() {
@@ -193,4 +200,12 @@ fn pump(context: &Context, session: &Session, capture: &mut Loopback, stream: &m
     }
     log!("[ENGINE] capture_late={late} capture_lost={lost}");
     None
+}
+
+fn log_counts(counts: airtight_airplay::Counts, filled: u32) {
+    let airtight_airplay::Counts { resent, late, dropped, inserted } = counts;
+    // A steady trickle of dropped frames is normal clock drift.
+    if resent + inserted + filled > 0 {
+        log!("[STREAM] last {} s: resent={resent} late={late} dropped={dropped} inserted={inserted} silence_filled={filled}", COUNTS_EVERY.as_secs());
+    }
 }

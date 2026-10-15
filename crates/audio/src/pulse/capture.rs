@@ -15,12 +15,14 @@ pub struct Loopback {
     bytes: Vec<u8>,
     /// Pulse drops what overflows without saying so.
     pub lost: u32,
+    /// The monitor never has gaps to fill.
+    pub filled: u32,
 }
 
 impl Loopback {
     pub fn open(endpoint_id: &str) -> Result<Loopback> {
         let record = Record::open(endpoint_id, SAMPLE_RATE, CHANNELS as u8, PERIOD_BYTES as u32, BUFFER_BYTES as u32)?;
-        Ok(Loopback { record, bytes: vec![0; PERIOD_BYTES], lost: 0 })
+        Ok(Loopback { record, bytes: vec![0; PERIOD_BYTES], lost: 0, filled: 0 })
     }
 
     /// Append the next period of samples to `out`.
