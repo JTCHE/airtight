@@ -1,0 +1,8 @@
+[package]
+name = "airtight-wire"
+description = "AirPlay 2 wire formats: binary plist, TLV8, RTSP, MediaRemote, ALAC, RTP, mDNS, JSON."
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+airtight-crypto = { path = "../crypto" }

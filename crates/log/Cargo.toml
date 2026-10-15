@@ -1,0 +1,9 @@
+[package]
+name = "airtight-log"
+description = "The session log next to the settings."
+edition.workspace = true
+version.workspace = true
+
+[target.'cfg(windows)'.dependencies.windows]
+workspace = true
+features = ["Win32_System_SystemInformation", "Win32_Foundation"]

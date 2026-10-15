@@ -1,0 +1,15 @@
+[package]
+name = "airtight-airplay"
+description = "An AirPlay 2 sender: pairing, session setup, realtime audio, Now Playing, discovery."
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+airtight-crypto = { path = "../crypto" }
+airtight-log = { path = "../log" }
+airtight-ptp = { path = "../ptp" }
+airtight-wire = { path = "../wire" }
+
+[target.'cfg(windows)'.dependencies.windows]
+workspace = true
+features = ["Win32_Networking_WinSock"]

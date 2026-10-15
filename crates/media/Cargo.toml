@@ -1,0 +1,16 @@
+[package]
+name = "airtight-media"
+description = "What Windows says is playing, from the system media session, and remote control of it."
+edition.workspace = true
+version.workspace = true
+
+[target.'cfg(windows)'.dependencies.windows]
+workspace = true
+features = [
+    "Foundation",
+    "Graphics_Imaging",
+    "Media_Control",
+    "Media_Devices",
+    "Storage_Streams",
+    "Win32_System_Com",
+]

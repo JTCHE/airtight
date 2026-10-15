@@ -1,0 +1,9 @@
+[package]
+name = "airtight-crypto"
+description = "SHA-512, HMAC/HKDF, ChaCha20-Poly1305 and SRP-6a for AirPlay pairing."
+edition.workspace = true
+version.workspace = true
+
+[target.'cfg(windows)'.dependencies.windows]
+workspace = true
+features = ["Win32_Security_Cryptography"]

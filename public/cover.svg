@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="400" viewBox="0 0 1280 400" role="img" aria-label="Airtight: AirPlay 2 from Windows and Linux">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#232323"/>
+      <stop offset="1" stop-color="#171717"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#60cdff" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#60cdff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1280" height="400" rx="28" fill="url(#bg)"/>
+
+  <g transform="translate(96 132)">
+    <rect width="136" height="136" rx="30" fill="#005fb8"/>
+    <rect x="40.8" y="76.1" width="12" height="27.2" rx="5.4" fill="#fff"/>
+    <rect x="62.6" y="54.4" width="12" height="49" rx="5.4" fill="#fff"/>
+    <rect x="84.3" y="32.6" width="12" height="70.7" rx="5.4" fill="#fff"/>
+  </g>
+  <text x="270" y="208" fill="#ffffff" font-family="'Segoe UI Variable Display','Segoe UI',system-ui,-apple-system,Helvetica,Arial,sans-serif" font-size="76" font-weight="600" letter-spacing="-1.5">Airtight</text>
+  <text x="272" y="256" fill="#a8a8a8" font-family="'Segoe UI Variable Text','Segoe UI',system-ui,-apple-system,Helvetica,Arial,sans-serif" font-size="28">AirPlay 2 from Windows and Linux</text>
+
+  <g fill="none" stroke="#d6d6d6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="760" y="148" width="160" height="104" rx="10"/>
+    <path d="M820 252 L812 278 M860 252 L868 278 M800 278 H880"/>
+  </g>
+  <g fill="none" stroke="#60cdff" stroke-width="3.5" stroke-linecap="round">
+    <path d="M958 176 A34 34 0 0 1 958 224"/>
+    <path d="M976 160 A56 56 0 0 1 976 240" opacity="0.7"/>
+    <path d="M994 144 A78 78 0 0 1 994 256" opacity="0.4"/>
+  </g>
+  <ellipse cx="1124" cy="150" rx="60" ry="22" fill="url(#glow)"/>
+  <rect x="1070" y="136" width="108" height="140" rx="44" fill="#2b2b2b" stroke="#d6d6d6" stroke-width="3"/>
+  <ellipse cx="1124" cy="152" rx="26" ry="7" fill="#60cdff" opacity="0.85"/>
+</svg>

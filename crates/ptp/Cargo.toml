@@ -1,0 +1,5 @@
+[package]
+name = "airtight-ptp"
+description = "A gPTP grandmaster over UDP 319/320, as AirPlay 2 receivers expect from a sender."
+edition.workspace = true
+version.workspace = true

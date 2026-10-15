@@ -1,0 +1,50 @@
+# Tests on Windows and Linux. A v* tag also builds the release: built here,
+# so the binaries come from the public source and carry no local paths.
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            binary: airtight.exe
+            asset: airtight.exe
+          # The oldest supported runner: its glibc sets the floor.
+          - os: ubuntu-22.04
+            binary: airtight
+            asset: airtight-linux-x86_64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup update stable && rustup default stable
+      - run: cargo test --workspace
+      - run: cargo build -p airtight-app --release
+      - run: mkdir dist && cp target/release/${{ matrix.binary }} dist/${{ matrix.asset }}
+        shell: bash
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: dist/${{ matrix.asset }}
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - run: gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --title "Airtight $GITHUB_REF_NAME" --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}

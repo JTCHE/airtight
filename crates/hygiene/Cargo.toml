@@ -1,0 +1,5 @@
+[package]
+name = "airtight-hygiene"
+description = "Checks the directory shape and the size limits in AGENTS.md."
+edition.workspace = true
+version.workspace = true
