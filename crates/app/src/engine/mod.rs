@@ -108,8 +108,9 @@ fn run(context: &Context) {
         return;
     };
     let host = context.receiver.host;
-    log!("--- start host={host} endpoint={:?} volume={} latency_ms={}", endpoint.name, s.volume, s.latency_ms);
-    let config = Config { receiver: SocketAddrV4::new(host, 7000), volume: s.volume, latency_ms: s.latency_ms };
+    let latency_ms = endpoint::driver_latency_ms(&endpoint).unwrap_or(s.latency_ms);
+    log!("--- start host={host} endpoint={:?} volume={} latency_ms={latency_ms}", endpoint.name, s.volume);
+    let config = Config { receiver: SocketAddrV4::new(host, 7000), volume: s.volume, latency_ms };
     let identity = Identity::new(&airtight_airplay::discovery::host_name());
     let session = match Session::connect(&config, identity, remote(&context.media)) {
         Ok(session) => Arc::new(session),

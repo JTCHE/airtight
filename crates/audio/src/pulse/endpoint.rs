@@ -21,3 +21,8 @@ pub fn find(name: Option<&str>) -> Option<Endpoint> {
         None => default(),
     }
 }
+
+/// No virtual speaker driver on Linux.
+pub fn driver_latency_ms(_: &Endpoint) -> Option<u32> {
+    None
+}

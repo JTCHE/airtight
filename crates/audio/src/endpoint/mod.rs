@@ -52,3 +52,17 @@ pub fn find(name: Option<&str>) -> Option<Endpoint> {
 pub(crate) fn device(id: &str) -> Result<IMMDevice> {
     unsafe { enumerator()?.GetDevice(&HSTRING::from(id)) }
 }
+
+/// The delay the Airtight virtual speaker reports to apps, so they hold video
+/// back by it. The stream must use the same buffer. None for other outputs.
+pub fn driver_latency_ms(endpoint: &Endpoint) -> Option<u32> {
+    use windows::Win32::System::Registry::{HKEY_LOCAL_MACHINE, RRF_RT_REG_DWORD, RegGetValueW};
+    use windows::core::w;
+    if !endpoint.name.contains("Airtight") {
+        return None;
+    }
+    let (mut value, mut size) = (0u32, 4u32);
+    let key = w!(r"SYSTEM\CurrentControlSet\Services\AirtightAudio\Parameters");
+    let found = unsafe { RegGetValueW(HKEY_LOCAL_MACHINE, key, w!("LatencyMs"), RRF_RT_REG_DWORD, None, Some((&raw mut value).cast()), Some(&mut size)) };
+    found.is_ok().then_some(value)
+}
