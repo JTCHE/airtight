@@ -1,11 +1,8 @@
 # Airtight
 
-<img src="public/cover.svg" alt="Airtight: AirPlay 2 from Windows and Linux. A computer sends sound to a HomePod.">
-
+<p align="center"><img src="public/panel.png" width="320" alt="The Airtight panel: the receiver Living Room is streaming, with a volume slider below it"></p>
 <p align="center"><b>Stream what your computer plays to a HomePod, over AirPlay 2.</b><br>
 A native app in Rust, for Windows and Linux. Works with HomePodOS 27.</p>
-
-<p align="center"><img src="public/panel.png" width="320" alt="The Airtight panel: the receiver Living Room is streaming, with a volume slider below it"></p>
 
 ## Install
 
@@ -28,9 +25,10 @@ The script builds Airtight, asks for the receiver, and runs it as a user service
 
 ## Use
 
-**Windows:** click the tray icon, then click a receiver. Click it again to stop. The **⋯** menu sets the output to capture, the buffer, and when to connect.
+### Windows
+Click the tray icon, then click a receiver. Click it again to stop. The **⋯** menu sets the output to capture, the buffer, and when to connect.
 
-**Linux:**
+### Linux
 
 ```sh
 airtight --list               # find the receivers
